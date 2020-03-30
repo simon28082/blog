@@ -3,18 +3,21 @@ module github.com/crcms/blog/web
 go 1.14
 
 require (
-	github.com/firmeve/firmeve v0.0.0-20200325094119-604041b199bb
+	github.com/firmeve/firmeve v0.0.0-20200330012259-f1337074af38
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.2.0
+	github.com/gomarkdown/markdown v0.0.0-20200316172748-fd1f3374857d
 	github.com/jinzhu/gorm v1.9.12
 	github.com/mitchellh/mapstructure v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/cobra v0.0.6
 	github.com/spf13/viper v1.6.2 // indirect
 	go.uber.org/zap v1.14.1 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775 // indirect
 	golang.org/x/tools v0.0.0-20200326210457-5d86d385bf88 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect

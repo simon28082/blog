@@ -1,53 +1,106 @@
 package commands
 
 import (
-	kernel2 "github.com/firmeve/firmeve/bootstrap"
-	"github.com/firmeve/firmeve/kernel"
+	"fmt"
 	"github.com/firmeve/firmeve/kernel/contract"
+	"github.com/firmeve/firmeve/support/path"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"strings"
 )
 
 type MarkdownCommand struct {
-	kernel.Command
-	command *cobra.Command
 }
 
-func (c *MarkdownCommand) newCmd() *cobra.Command {
-	c.command = new(cobra.Command)
-	c.command.Use = "markdown"
-	c.command.Short = "Parse all markdown file"
-	c.command.Flags().StringP("path", "", "", "file path")
+func (m MarkdownCommand) CobraCmd() *cobra.Command {
+	command := new(cobra.Command)
+	command.Use = "markdown"
+	command.Short = "Parse all markdown file"
+	command.Flags().StringP("path", "", path.RunRelative("../../../../sources"), "file path")
 
-	c.command.Run = c.run
-
-	return c.command
+	return command
 }
 
-func (m *MarkdownCommand) Cmd() *cobra.Command {
-	if m.command == nil {
-		m.command = c.newCmd()
+func (m MarkdownCommand) Run(root contract.BaseCommand, cmd *cobra.Command, args []string) {
+	logger := root.Application().Resolve(`logger`).(contract.Loggable)
+	path := cmd.Flag(`path`).Value.String()
+
+	if path == `` {
+		logger.Error("path error")
 	}
 
-	return c.command
+	if err := getAllFile(path); err != nil {
+		logger.Error("%#v", err)
+	}
+
+	// 先解析一个单文件
+	md := []byte("## markdown document")
+	output := markdown.ToHTML(md, nil, nil)
+	fmt.Println(cmd.Flag(`path`).Value.String())
+	fmt.Printf("%s", output)
 }
 
-func (m MarkdownCommand) SetApplication(app contract.Application) {
-	panic("implement me")
-}
+// return (ast.GoToNext, true) to tell html renderer to skip rendering this node
+// (because you've rendered it)
+//func renderHookDropCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+//	fmt.Printf("%#v",node.)
+//	// skip all nodes that are not CodeBlock nodes
+//	if _, ok := node.(*ast.CodeBlock); !ok {
+//		return ast.GoToNext, false
+//	}
+//	// custom rendering logic for ast.CodeBlock. By doing nothing it won't be
+//	// present in the output
+//	return ast.GoToNext, true
+//}
 
-func (m MarkdownCommand) SetProviders(providers []contract.Provider) {
-	panic("implement me")
-}
 
-func (m MarkdownCommand) Application() contract.Application {
-	panic("implement me")
-}
+//md := "test\n```\nthis code block will be dropped from output\n```\ntext"
+//html := markdown.ToHTML([]byte(s), nil, renderer)
 
-func (m MarkdownCommand) Providers() []contract.Provider {
-	panic("implement me")
-}
+func getAllFile(filepath string) error {
+	// 遍历所有目录和文件
+	resources, err := ioutil.ReadDir(filepath)
+	if err != nil {
+		return err
+	}
 
-func (c *MarkdownCommand) run(cmd *cobra.Command, args []string) {
-	// bootstrap
-	kernel2.BootFromCommand(c)
+	for _, file := range resources {
+		if file.IsDir() {
+			//getAllFile()
+		} else {
+			filefullpath := filepath + `/` + file.Name()
+			bytes, err := ioutil.ReadFile(filefullpath)
+
+			opts := html.RendererOptions{
+				Flags: html.CommonFlags,
+				//RenderNodeHook: renderHookDropCodeBlock,
+			}
+			renderer := html.NewRenderer(opts)
+
+			html := markdown.ToHTML(bytes,nil,renderer)
+
+
+			//
+			//<!DOCTYPE html>
+			//<html lang="en">
+			//<head>
+			//<meta charset="UTF-8">
+			//<title>Title</title>
+			//</head>
+			//<body>
+			//
+			//</body>
+			//</html>
+			if err == nil {
+				//fileinfo,_ := os.Stat(filefullpath)
+				filename := strings.Replace(file.Name(),".md",".html",1)
+				ioutil.WriteFile(path.RunRelative("../../../public/html/"+filename), []byte(html), file.Mode())
+			}
+			fmt.Println(file.Name())
+		}
+	}
+
+	return nil
 }
