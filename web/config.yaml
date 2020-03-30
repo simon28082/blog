@@ -1,0 +1,35 @@
+app:
+  name: app
+  def: 123
+  jwt:
+    secret: "abc"
+    expire: 15000
+database:
+  default: mysql
+  connections:
+    mysql:
+      addr: "root:root@tcp(127.0.0.1:3306)/firmeve?charset=utf8mb4&parseTime=True&loc=Local"
+logging:
+  default: stack
+  channels:
+    stack:
+      - file
+      - console
+    file:
+      path: "./testdata"
+      # megabytes
+      size:    100
+      backup: 3
+      age:     1
+      # debug ,info,warn,error,fatal
+      level: debug
+    console:
+      level: debug
+cache:
+  prefix: firmeve_cache
+  default: redis
+  repositories:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      db: 0
