@@ -8,7 +8,7 @@ database:
   default: sqlite3
   connections:
     sqllite:
-      addr: "./a.db"
+      addr: "/tmp/a.db"
     mysql:
       addr: "root:root@tcp(127.0.0.1:3306)/firmeve?charset=utf8mb4&parseTime=True&loc=Local"
 logging:

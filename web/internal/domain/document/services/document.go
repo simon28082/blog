@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/crcms/blog/web/internal/domain/document/models"
 	"github.com/jinzhu/gorm"
 	"github.com/firmeve/firmeve/converter/resource"
@@ -27,6 +28,10 @@ func ( d *Document) List(db *gorm.DB,req *http.Request) *resource.Paginator {
 		Fields:      []string{"id", "content", "uuid",`title`},
 	}
 	var documents []models.Document
-	store,_ := paging.NewGORMStore(db, &documents)
+	v := new(models.Document)
+	db.Find(v)
+	fmt.Println(v.Title)
+
+	store,_ := paging.NewGORMStore(db.New().Order(`created_at desc`), &documents)
 	return resource.NewPaginator(store,option,req,pageOption)
 }

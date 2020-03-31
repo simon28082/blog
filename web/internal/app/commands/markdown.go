@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/crcms/blog/web/internal/domain/document/models"
-	"github.com/firmeve/firmeve/database"
 	"github.com/jinzhu/gorm"
 	"time"
 
@@ -57,7 +56,7 @@ func (m MarkdownCommand) Run(root contract.BaseCommand, cmd *cobra.Command, args
 		logger.Error("path error")
 	}
 
-	db := root.Resolve(`db`).(*database.DB).ConnectionDefault()
+	db := root.Resolve(`db.connection`).(*gorm.DB)
 	//fmt.Printf("%#v",db)
 	//db.AutoMigrate(&models.Document{})
 	//
