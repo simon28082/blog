@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"github.com/crcms/blog/web/internal/app/handlers"
 	"github.com/firmeve/firmeve/kernel"
 	"github.com/firmeve/firmeve/kernel/contract"
 )
@@ -22,5 +23,5 @@ func (d *DocumentProvider) Boot() {
 }
 
 func documentRoute(router contract.HttpRouter)  {
-
+	router.GET("/list", handlers.List)
 }

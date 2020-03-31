@@ -5,8 +5,10 @@ app:
     secret: "abc"
     expire: 15000
 database:
-  default: mysql
+  default: sqlite3
   connections:
+    sqllite:
+      addr: "./a.db"
     mysql:
       addr: "root:root@tcp(127.0.0.1:3306)/firmeve?charset=utf8mb4&parseTime=True&loc=Local"
 logging:

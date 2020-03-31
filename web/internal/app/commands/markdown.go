@@ -1,14 +1,40 @@
 package commands
 
 import (
-	"fmt"
+	"github.com/crcms/blog/web/internal/domain/document/models"
+	"github.com/firmeve/firmeve/database"
+	"github.com/jinzhu/gorm"
+	"time"
+
+	//"github.com/crcms/blog/web/internal/domain/document/models"
+	//"github.com/firmeve/firmeve/database"
 	"github.com/firmeve/firmeve/kernel/contract"
 	"github.com/firmeve/firmeve/support/path"
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/spf13/cobra"
-	"io/ioutil"
+	//"log"
+
+	//"github.com/jinzhu/gorm"
+
+	//"github.com/jinzhu/gorm"
+	//"github.com/russross/blackfriday"
+	"regexp"
 	"strings"
+
+	//"github.com/gomarkdown/markdown/html"
+
+	//"github.com/gomarkdown/markdown"
+	//"github.com/gomarkdown/markdown/html"
+	"io/ioutil"
+	//"strings"
+
+	//"github.com/gomarkdown/markdown"
+	//"github.com/gomarkdown/markdown/html"
+
+	//"github.com/gomarkdown/markdown"
+	//"github.com/gomarkdown/markdown/html"
+
+	//"github.com/gomarkdown/markdown"
+	//"github.com/gomarkdown/markdown/html"
+	"github.com/spf13/cobra"
 )
 
 type MarkdownCommand struct {
@@ -31,15 +57,39 @@ func (m MarkdownCommand) Run(root contract.BaseCommand, cmd *cobra.Command, args
 		logger.Error("path error")
 	}
 
-	if err := getAllFile(path); err != nil {
+	db := root.Resolve(`db`).(*database.DB).ConnectionDefault()
+	//fmt.Printf("%#v",db)
+	//db.AutoMigrate(&models.Document{})
+	//
+	//d := &models.Document{
+	//	Uuid:    "fdsa",
+	//	Title:   "fdsafdsafdsafdsa",
+	//	Content: "fdsa",
+	//}
+	//
+	//db.Create(d)
+	//
+	//v := new(models.Document)
+	//e := db.Where("title=?","fdsafdsafdsafdsa").Find(v).Error
+	//if e != nil {
+	//	log.Println(e.Error())
+	//}
+	//fmt.Println("=============")
+	//fmt.Println(v.Title)
+	//
+	////db.
+	//
+	//fmt.Println("=============")
+	////
+	if err := getAllFile(db,path); err != nil {
 		logger.Error("%#v", err)
 	}
 
 	// 先解析一个单文件
-	md := []byte("## markdown document")
-	output := markdown.ToHTML(md, nil, nil)
-	fmt.Println(cmd.Flag(`path`).Value.String())
-	fmt.Printf("%s", output)
+	//md := []byte("## markdown document")
+	//output := markdown.ToHTML(md, nil, nil)
+	//fmt.Println(cmd.Flag(`path`).Value.String())
+	//fmt.Printf("%s", "output")
 }
 
 // return (ast.GoToNext, true) to tell html renderer to skip rendering this node
@@ -55,11 +105,10 @@ func (m MarkdownCommand) Run(root contract.BaseCommand, cmd *cobra.Command, args
 //	return ast.GoToNext, true
 //}
 
-
 //md := "test\n```\nthis code block will be dropped from output\n```\ntext"
 //html := markdown.ToHTML([]byte(s), nil, renderer)
 
-func getAllFile(filepath string) error {
+func getAllFile(db *gorm.DB,filepath string) error {
 	// 遍历所有目录和文件
 	resources, err := ioutil.ReadDir(filepath)
 	if err != nil {
@@ -70,17 +119,42 @@ func getAllFile(filepath string) error {
 		if file.IsDir() {
 			//getAllFile()
 		} else {
-			filefullpath := filepath + `/` + file.Name()
-			bytes, err := ioutil.ReadFile(filefullpath)
+			data := parseFile(filepath + `/` + file.Name())
 
-			opts := html.RendererOptions{
-				Flags: html.CommonFlags,
-				//RenderNodeHook: renderHookDropCodeBlock,
+			model := &models.Document{
+				Title:     data[`title`][0],
+				Content:   data[`content`][0],
+				Description:data[`description`][0],
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
 			}
-			renderer := html.NewRenderer(opts)
 
-			html := markdown.ToHTML(bytes,nil,renderer)
+			db.Save(model)
 
+
+			//bytes, _ := ioutil.ReadFile(filefullpath)
+			//rec,_ := regexp.Compile("\\-\\-\\-([^\\-]*)\\-\\-\\-")
+			//v := rec.FindStringSubmatch(string(bytes))
+			////fmt.Printf("%v",rec.FindStringSubmatch(string(bytes)))
+			//fmt.Println(strings.Split(strings.Trim(v[1],"\n"),"\n"))
+			//fmt.Println("=================")
+			//
+			////fmt.Println(filefullpath)
+			//output := blackfriday.Run(bytes)
+			//markdown := blackfriday.New()
+			//node := markdown.Parse(bytes)
+			//
+			//
+			//fmt.Printf("%#v",node.HeadingID)
+			//fmt.Printf("%s",output)
+			//print
+			//opts := html.RendererOptions{
+			//	Flags: html.CommonFlags,
+			//	//RenderNodeHook: renderHookDropCodeBlock,
+			//}
+			//renderer := html.NewRenderer(opts)
+			//
+			//html := markdown.ToHTML(bytes,nil,renderer)
 
 			//
 			//<!DOCTYPE html>
@@ -93,14 +167,51 @@ func getAllFile(filepath string) error {
 			//
 			//</body>
 			//</html>
-			if err == nil {
-				//fileinfo,_ := os.Stat(filefullpath)
-				filename := strings.Replace(file.Name(),".md",".html",1)
-				ioutil.WriteFile(path.RunRelative("../../../public/html/"+filename), []byte(html), file.Mode())
-			}
-			fmt.Println(file.Name())
+			//if err == nil {
+			//	//fileinfo,_ := os.Stat(filefullpath)
+			//	filename := strings.Replace(file.Name(),".md",".html",1)
+			//	ioutil.WriteFile(path.RunRelative("../../../public/html/"+filename), []byte(html), file.Mode())
+			//}
+			//fmt.Println(file.Name())
 		}
 	}
 
 	return nil
+}
+
+func parseFile(filepath string) map[string][]string {
+	// get content
+	bytes, _ := ioutil.ReadFile(filepath)
+
+	// 标题，tag处理
+	rec, _ := regexp.Compile("\\-\\-\\-([^\\-]*)\\-\\-\\-")
+
+	if !rec.Match(bytes) {
+		return nil
+	}
+
+	data := make(map[string][]string)
+
+	match := rec.FindStringSubmatch(string(bytes))
+	baseInfo := strings.Split(strings.Trim(match[1], "\n"), "\n")
+	for _, v := range baseInfo {
+		item := strings.Split(v, `:`)
+		if item[0] == `tags` {
+			data[item[0]] = strings.Split(item[1],`,`)
+		} else {
+			data[item[0]] = []string{item[1]}
+		}
+	}
+
+	contents := strings.Split(string(bytes),`---`)
+
+	data[`content`] = []string{contents[2]}
+
+	length := len(contents[2])
+	if length > 100 {
+		length = 100
+	}
+	data[`description`] = []string{string([]rune(contents[2])[:length])}
+
+	return data
 }

@@ -1,7 +1,9 @@
 package providers
 
 import (
+	"github.com/crcms/blog/web/internal/domain/document/models"
 	"github.com/crcms/blog/web/internal/interfaces/web/handlers"
+	"github.com/firmeve/firmeve/database"
 	"github.com/firmeve/firmeve/kernel"
 	"github.com/firmeve/firmeve/kernel/contract"
 	"github.com/firmeve/firmeve/support/path"
@@ -21,6 +23,10 @@ func (a AppProvider) Register() {
 
 func (a *AppProvider) Boot() {
 	appRoute(a.Firmeve.Get(`http.router`).(contract.HttpRouter))
+
+	//migration
+	db := a.Firmeve.Resolve(`db`).(*database.DB).ConnectionDefault()
+	db.AutoMigrate(&models.Document{})
 }
 
 func appRoute(router contract.HttpRouter) {
